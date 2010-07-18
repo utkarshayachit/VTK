@@ -34,6 +34,7 @@
 #include "vtkSelectionNode.h"
 #include "vtkSmartPointer.h"
 #include "vtkStringArray.h"
+#include "vtkView.h"
 
 #include <vtkstd/map>
 
@@ -334,6 +335,19 @@ const char* vtkDataRepresentation::GetSelectionArrayName()
     return this->SelectionArrayNames->GetValue(0);
     }
   return 0;
+}
+
+//----------------------------------------------------------------------------
+int vtkDataRepresentation::ProcessViewRequest(
+  vtkInformationRequestKey* request,
+  vtkInformation* vtkNotUsed(inInfo), vtkInformation* vtkNotUsed(outInfo))
+{
+  if (request == vtkView::REQUEST_UPDATE())
+    {
+    this->Update();
+    }
+
+  return 1;
 }
 
 //----------------------------------------------------------------------------

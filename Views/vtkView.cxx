@@ -25,12 +25,15 @@
 #include "vtkCommand.h"
 #include "vtkDataObject.h"
 #include "vtkDataRepresentation.h"
+#include "vtkInformation.h"
+#include "vtkInformationRequestKey.h"
+#include "vtkInformationVector.h"
 #include "vtkObjectFactory.h"
 #include "vtkSelection.h"
 #include "vtkSelectionNode.h"
+#include "vtkSmartPointer.h"
 #include "vtkStringArray.h"
 #include "vtkViewTheme.h"
-#include "vtkSmartPointer.h"
 
 #include <vtkstd/map>
 #include <vtkstd/string>
@@ -38,6 +41,10 @@
 
 #define VTK_CREATE(type, name) \
   vtkSmartPointer<type> name = vtkSmartPointer<type>::New()
+
+vtkInformationKeyMacro(vtkView, REQUEST_UPDATE, Request);
+vtkInformationKeyMacro(vtkView, REQUEST_INFORMATION, Request);
+vtkInformationKeyMacro(vtkView, REQUEST_PREPARE_FOR_RENDER, Request);
 
 //----------------------------------------------------------------------------
 class vtkView::Command : public vtkCommand
@@ -85,6 +92,9 @@ vtkView::vtkView()
   this->Observer = vtkView::Command::New();
   this->Observer->SetTarget(this);
   this->ReuseSingleRepresentation = false;
+
+  this->RequestInformation = vtkInformation::New();
+  this->ReplyInformationVector = vtkInformationVector::New();
   
   // Apply default theme
   vtkViewTheme* theme = vtkViewTheme::New();
@@ -96,6 +106,9 @@ vtkView::vtkView()
 vtkView::~vtkView()
 {
   this->RemoveAllRepresentations();
+
+  this->RequestInformation->Delete();
+  this->ReplyInformationVector->Delete();
 
   this->Observer->SetTarget(0);
   this->Observer->Delete();
@@ -351,14 +364,30 @@ void vtkView::UnRegisterProgress(vtkObject* algorithm)
 //----------------------------------------------------------------------------
 void vtkView::Update()
 {
-  unsigned int i;
-  for( i = 0; i < this->Implementation->Representations.size(); i++ )
+  this->CallProcessViewRequest(vtkView::REQUEST_UPDATE(),
+    this->RequestInformation, this->ReplyInformationVector);
+}
+
+//----------------------------------------------------------------------------
+void vtkView::CallProcessViewRequest(
+  vtkInformationRequestKey* type, vtkInformation* inInfo, vtkInformationVector* outVec)
+{
+  outVec->SetNumberOfInformationObjects(
+    static_cast<int>(this->Implementation->Representations.size()));
+  for (size_t cc=0; cc < this->Implementation->Representations.size(); cc++)
     {
-    if( this->Implementation->Representations[i] )
+    vtkInformation* outInfo = outVec->GetInformationObject(cc);
+    outInfo->Clear();
+    if (this->Implementation->Representations[cc])
       {
-      this->Implementation->Representations[i]->Update();
+      this->Implementation->Representations[cc]->ProcessViewRequest(
+        type, inInfo, outInfo);
       }
     }
+
+  // Clear input information since we are done with the pass. This avoids any
+  // need for garbage collection.
+  inInfo->Clear();
 }
 
 //----------------------------------------------------------------------------

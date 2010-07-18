@@ -53,6 +53,7 @@ class vtkAlgorithmOutput;
 class vtkAnnotationLayers;
 class vtkAnnotationLink;
 class vtkDataObject;
+class vtkInformationRequestKey;
 class vtkSelection;
 class vtkStringArray;
 class vtkView;
@@ -187,6 +188,15 @@ public:
   // If a VALUES selection, the array used to produce a selection.
   virtual void SetSelectionArrayName(const char* name);
   virtual const char* GetSelectionArrayName();
+
+  // Description:
+  // vtkAlgorithm::ProcessRequest() equivalent for rendering passes. This is
+  // typically called by the vtkView to request meta-data from the
+  // representations or ask them to perform certain tasks e.g.
+  // PrepareForRendering.
+  // Look at vtkView for default types of view passes.
+  virtual int ProcessViewRequest(vtkInformationRequestKey*,
+    vtkInformation* inInfo, vtkInformation* outInfo);
 
 protected:
   vtkDataRepresentation();
