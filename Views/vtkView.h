@@ -201,6 +201,11 @@ public:
   // REQUEST_UPDATE() has happened. This is called for every render.
   static vtkInformationRequestKey* REQUEST_PREPARE_FOR_RENDER();
 
+  // Description:
+  // This is a render pass. This happens only after
+  // REQUEST_PREPARE_FOR_RENDER() has happened. This is called for every render.
+  static vtkInformationRequestKey* REQUEST_RENDER();
+
 //BTX
 protected:
   vtkView();
