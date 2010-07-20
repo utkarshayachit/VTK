@@ -45,6 +45,7 @@
 vtkInformationKeyMacro(vtkView, REQUEST_UPDATE, Request);
 vtkInformationKeyMacro(vtkView, REQUEST_INFORMATION, Request);
 vtkInformationKeyMacro(vtkView, REQUEST_PREPARE_FOR_RENDER, Request);
+vtkInformationKeyMacro(vtkView, REQUEST_RENDER, Request);
 
 //----------------------------------------------------------------------------
 class vtkView::Command : public vtkCommand
