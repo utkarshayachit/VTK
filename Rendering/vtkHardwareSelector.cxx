@@ -134,7 +134,7 @@ bool vtkHardwareSelector::CaptureBuffers()
     return false;
     }
 
-  rwin->SwapBuffersOff();
+  //rwin->SwapBuffersOff();
   vtkRenderWindowInteractor* iren = rwin->GetInteractor();
 
   // Initialize renderer for selection.
@@ -156,7 +156,7 @@ bool vtkHardwareSelector::CaptureBuffers()
     // We go through render window interactor, if available, since that allows
     // applications, such as ParaView, to do application specific updates etc.
     // before render gets called.
-    if (iren)
+    if (false && iren)
       {
       iren->Render();
       }

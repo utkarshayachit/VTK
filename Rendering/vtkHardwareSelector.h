@@ -106,7 +106,7 @@ public:
   // clear buffers after one's done with the scene.
   // The optional final parameter maxDist will look for a cell within the specified
   // number of pixels from display_position.
-  bool CaptureBuffers();
+  virtual bool CaptureBuffers();
   bool GetPixelInformation(unsigned int display_position[2],
     int& processId,
     vtkIdType& attrId, vtkProp*& prop)
