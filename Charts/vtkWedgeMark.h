@@ -188,7 +188,7 @@ public:
   // Description:
   // Release graphics resources hold by the item.
   virtual void ReleaseGraphicsResources();
-  
+//BTX
 protected:
   vtkWedgeMark();
   ~vtkWedgeMark();
@@ -203,6 +203,7 @@ protected:
 private:
   vtkWedgeMark(const vtkWedgeMark &); // Not implemented.
   void operator=(const vtkWedgeMark &);   // Not implemented.
+//ETX
 };
 
 #endif //__vtkWedgeMark_h
