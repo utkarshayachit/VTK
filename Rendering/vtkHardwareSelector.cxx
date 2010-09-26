@@ -133,6 +133,7 @@ bool vtkHardwareSelector::CaptureBuffers()
       "Currently: " << rgba[0] << ", " << rgba[1] << ", " <<rgba[2]);
     return false;
     }
+  this->InvokeEvent(vtkCommand::StartEvent);
 
   //rwin->SwapBuffersOff();
   vtkRenderWindowInteractor* iren = rwin->GetInteractor();
@@ -152,7 +153,6 @@ bool vtkHardwareSelector::CaptureBuffers()
       {
       continue;
       }
-    this->InvokeEvent(vtkCommand::StartEvent);
     // We go through render window interactor, if available, since that allows
     // applications, such as ParaView, to do application specific updates etc.
     // before render gets called.
@@ -164,7 +164,6 @@ bool vtkHardwareSelector::CaptureBuffers()
       {
       rwin->Render();
       }
-    this->InvokeEvent(vtkCommand::EndEvent);
     this->SavePixelBuffer(this->CurrentPass);
     }
   this->EndSelection();
@@ -173,6 +172,7 @@ bool vtkHardwareSelector::CaptureBuffers()
   this->Renderer->SetBackground(this->Internals->OriginalBackground);
   this->Renderer->SetGradientBackground(this->Internals->OriginalGradient);
   this->Renderer->GetRenderWindow()->SwapBuffersOn();
+  this->InvokeEvent(vtkCommand::EndEvent);
   return true;
 }
 
@@ -352,6 +352,18 @@ int vtkHardwareSelector::Render(vtkRenderer* renderer, vtkProp** propArray,
     }
 
   return propsRenderered;
+}
+
+//----------------------------------------------------------------------------
+vtkProp* vtkHardwareSelector::GetProp(int id)
+{
+  vtkstd::map<int, vtkSmartPointer<vtkProp> >::iterator iter =
+    this->Internals->Props.find(id);
+  if (iter != this->Internals->Props.end())
+    {
+    return iter->second;
+    }
+  return NULL;
 }
 
 //----------------------------------------------------------------------------
