@@ -198,6 +198,15 @@ public:
   virtual int ProcessViewRequest(vtkInformationRequestKey*,
     vtkInformation* inInfo, vtkInformation* outInfo);
 
+  // Description:
+  // Convert the selection to a type appropriate for sharing with other
+  // representations through vtkAnnotationLink, possibly using the view.
+  // For the superclass, we just return the same selection.
+  // Subclasses may do something more fancy, like convert the selection
+  // from a frustrum to a list of pedigree ids.  If the selection cannot
+  // be applied to this representation, return NULL.
+  virtual vtkSelection* ConvertSelection(vtkView* view, vtkSelection* selection);
+
 protected:
   vtkDataRepresentation();
   ~vtkDataRepresentation();
@@ -260,15 +269,6 @@ protected:
   // vtkView::RemoveRepresentation().  Subclasses should override this method.
   // Returns true if the removal succeeds.
   virtual bool RemoveFromView(vtkView* vtkNotUsed(view)) { return true; }
-  
-  // Description:
-  // Convert the selection to a type appropriate for sharing with other
-  // representations through vtkAnnotationLink, possibly using the view.
-  // For the superclass, we just return the same selection.
-  // Subclasses may do something more fancy, like convert the selection
-  // from a frustrum to a list of pedigree ids.  If the selection cannot
-  // be applied to this representation, return NULL.
-  virtual vtkSelection* ConvertSelection(vtkView* view, vtkSelection* selection);
 
   // Description:
   // Analogous to ConvertSelection(), allows subclasses to manipulate annotations
