@@ -87,13 +87,13 @@ void vtkRenderViewBase::SetRenderWindow(vtkRenderWindow* win)
     this->RenderWindow->RemoveRenderer(ren);
     }
 
-  //// move interactor to new window
-  //vtkSmartPointer<vtkRenderWindowInteractor> iren =
-  //    this->RenderWindow->GetInteractor();
-  //this->RenderWindow->SetInteractor(NULL);
-  //iren->SetRenderWindow(NULL);
-  //win->SetInteractor(iren);
-  //iren->SetRenderWindow(win);
+  // move interactor to new window
+  vtkSmartPointer<vtkRenderWindowInteractor> iren =
+      this->RenderWindow->GetInteractor();
+  this->RenderWindow->SetInteractor(NULL);
+  iren->SetRenderWindow(NULL);
+  win->SetInteractor(iren);
+  iren->SetRenderWindow(win);
 
   this->RenderWindow = win;
   this->RenderWindow->AddObserver(vtkCommand::EndEvent, this->GetObserver());
