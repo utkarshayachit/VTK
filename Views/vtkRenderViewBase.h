@@ -27,6 +27,7 @@
 
 #include "vtkView.h"
 #include "vtkSmartPointer.h" // For SP ivars
+#include "vtkWeakPointer.h" // For WP ivars
 
 class vtkInteractorObserver;
 class vtkRenderer;
@@ -109,6 +110,9 @@ protected:
 
   vtkSmartPointer<vtkRenderer> Renderer;
   vtkSmartPointer<vtkRenderWindow> RenderWindow;
+  vtkSmartPointer<vtkInteractorObserver> InteractorStyle;
+  vtkWeakPointer<vtkRenderWindowInteractor> Interactor;
+
   int InteractionMode;
 
 private:
