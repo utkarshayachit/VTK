@@ -71,6 +71,7 @@ vtkWindowToImageFilter::vtkWindowToImageFilter()
   this->Viewport[2] = 1;
   this->Viewport[3] = 1;
   this->InputBufferType = VTK_RGB;
+  this->FixBoundary = true;
 
   this->SetNumberOfInputPorts(0);
   this->SetNumberOfOutputPorts(1);
@@ -126,6 +127,7 @@ void vtkWindowToImageFilter::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "Viewport: " << this->Viewport[0] << "," << this->Viewport[1]
      << "," << this->Viewport[2] << "," << this->Viewport[3] << "\n";
   os << indent << "InputBufferType: " << this->InputBufferType << "\n";
+  os << indent << "FixBoundary: " << this->FixBoundary << endl;
 }
 
 
@@ -304,15 +306,59 @@ void vtkWindowToImageFilter::RequestData(
 
   //this->Rescale2DActors();
   int x, y;
-  for (y = 0; y < this->Magnification; y++)
+
+  int magnification = this->Magnification;
+  bool overlap_viewports = false;
+  if (this->Magnification > 1 && this->FixBoundary)
     {
-    for (x = 0; x < this->Magnification; x++)
+    magnification++;
+    overlap_viewports = true;
+    }
+  double viewports[4*magnification*magnification];
+  for (y = 0; y < magnification; y++)
+    {
+    for (x = 0; x < magnification; x++)
+      {
+      double* cur_viewport = &viewports[ (magnification*y + x)*4 ];
+      cur_viewport[0] = static_cast<double>(x)/this->Magnification;
+      cur_viewport[1] = static_cast<double>(y)/this->Magnification;
+      cur_viewport[2] = (x+1.0)/this->Magnification;
+      cur_viewport[3] = (y+1.0)/this->Magnification;
+
+      if (overlap_viewports)
+        {
+        if (x > 0 && x < magnification-1)
+          {
+          cur_viewport[0] -= x * 4.0/winsize[0];
+          cur_viewport[2] -= x * 4.0/winsize[0];
+          }
+        if (x == magnification -1)
+          {
+          cur_viewport[0] = static_cast<double>(x-1)/this->Magnification;
+          cur_viewport[2] = static_cast<double>(x)/this->Magnification;
+
+          }
+        if (y > 0 && y < magnification-1)
+          {
+          cur_viewport[1] -= y * 4.0/winsize[1];
+          cur_viewport[3] -= y * 4.0/winsize[1];
+          }
+        if (y == magnification-1)
+          {
+          cur_viewport[1] = static_cast<double>(y-1)/this->Magnification;
+          cur_viewport[3] = static_cast<double>(y)/this->Magnification;
+          }
+        }
+      }
+    }
+
+  for (y = 0; y < magnification; y++)
+    {
+    for (x = 0; x < magnification; x++)
       {
       // setup the Window ivars
-      this->Input->SetTileViewport(static_cast<double>(x)/this->Magnification,
-                                   static_cast<double>(y)/this->Magnification,
-                                   (x+1.0)/this->Magnification,
-                                   (y+1.0)/this->Magnification);
+      double* cur_viewport = &viewports[ (magnification*y + x)*4 ];
+      this->Input->SetTileViewport(cur_viewport);
       double *tvp = this->Input->GetTileViewport();
 
       // for each renderer, setup camera
@@ -356,7 +402,7 @@ void vtkWindowToImageFilter::RequestData(
       // Shift 2d actors just before rendering
       //this->Shift2DActors(size[0]*x, size[1]*y);
       // now render the tile and get the data
-      if (this->ShouldRerender || this->Magnification > 1)
+      if (this->ShouldRerender || magnification > 1)
         {
         this->Input->Render();
         }
@@ -391,8 +437,21 @@ void vtkWindowToImageFilter::RequestData(
         pixels1 = pixels;
 
         // now write the data to the output image
-        outPtr = static_cast<unsigned char *>(
-          out->GetScalarPointer(x*size[0],y*size[1], 0));
+        if (overlap_viewports)
+          {
+          int xpos = int(cur_viewport[0]*size[0]*this->Magnification + 0.5);
+          int ypos = int(cur_viewport[1]*size[1]*this->Magnification + 0.5);
+          cout << xpos << ", " << ypos << endl;
+          outPtr = static_cast<unsigned char *>(
+            out->GetScalarPointer(xpos,ypos, 0));
+          }
+        else
+          {
+          cout << size[0] << ", " << size[1] << ", " << rowSize<<"," << outIncrY <<  endl;
+          outPtr = static_cast<unsigned char *>(
+            out->GetScalarPointer(x*size[0],y*size[1], 0));
+          }
+
         for (idxY = 0; idxY < size[1]; idxY++)
           {
           memcpy(outPtr,pixels1,rowSize);
