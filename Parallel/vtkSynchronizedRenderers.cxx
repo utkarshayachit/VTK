@@ -493,6 +493,7 @@ void vtkSynchronizedRenderers::vtkRawImage::Initialize(
   this->Data = data;
   this->Size[0] = dx;
   this->Size[1] = dy;
+  this->MarkValid();
 }
 
 //----------------------------------------------------------------------------
@@ -524,12 +525,13 @@ void vtkSynchronizedRenderers::vtkRawImage::SaveAsPNG(const char* filename)
 
   vtkImageData* img = vtkImageData::New();
   img->SetScalarTypeToUnsignedChar();
-  img->SetNumberOfScalarComponents(4);
+  img->SetNumberOfScalarComponents(this->GetRawPtr()->GetNumberOfComponents());
   img->SetDimensions(this->Size[0], this->Size[1], 1);
   img->AllocateScalars();
   memcpy(img->GetScalarPointer(),
     this->GetRawPtr()->GetVoidPointer(0),
-    sizeof(unsigned char)*this->Size[0]*this->Size[1]);
+    sizeof(unsigned char)*this->Size[0]*this->Size[1]*
+    this->Data->GetNumberOfComponents());
 
   vtkPNGWriter* writer = vtkPNGWriter::New();
   writer->SetFileName(filename);
@@ -592,12 +594,28 @@ bool vtkSynchronizedRenderers::vtkRawImage::PushToFrameBuffer()
   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
   glTexEnvf (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
-    this->GetWidth(), this->GetHeight(), 0,
-    GL_RGBA,
-    GL_UNSIGNED_BYTE,
-    static_cast<const GLvoid*>(
-      this->GetRawPtr()->GetVoidPointer(0)));
+  switch (this->Data->GetNumberOfComponents())
+    {
+  case 3:
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
+      this->GetWidth(), this->GetHeight(), 0,
+      GL_RGB,
+      GL_UNSIGNED_BYTE,
+      static_cast<const GLvoid*>(
+        this->GetRawPtr()->GetVoidPointer(0)));
+    break;
+  case 4:
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,
+      this->GetWidth(), this->GetHeight(), 0,
+      GL_RGBA,
+      GL_UNSIGNED_BYTE,
+      static_cast<const GLvoid*>(
+        this->GetRawPtr()->GetVoidPointer(0)));
+    break;
+  default:
+    vtkGenericWarningMacro("Case not handled.");
+    return false;
+    }
   glBindTexture(GL_TEXTURE_2D, tex);
   glDisable(GL_ALPHA_TEST);
   glDisable(GL_DEPTH_TEST);
